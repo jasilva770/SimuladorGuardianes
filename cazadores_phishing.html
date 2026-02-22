@@ -1,0 +1,2129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cazadores de Phishing — Simulador Interactivo</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Product+Sans:wght@400;700&family=Sora:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ═══════════════════════════════════════════
+   RESET & VARIABLES
+   ═══════════════════════════════════════════ */
+:root {
+  /* Gmail palette */
+  --gm-bg: #f6f8fc;
+  --gm-white: #ffffff;
+  --gm-sidebar: #f6f8fc;
+  --gm-blue: #1a73e8;
+  --gm-blue-hover: #1765cc;
+  --gm-red: #d93025;
+  --gm-red-bg: #fce8e6;
+  --gm-green: #188038;
+  --gm-green-bg: #e6f4ea;
+  --gm-yellow: #f9ab00;
+  --gm-yellow-bg: #fef7e0;
+  --gm-gray-50: #f8f9fa;
+  --gm-gray-100: #f1f3f4;
+  --gm-gray-200: #e8eaed;
+  --gm-gray-300: #dadce0;
+  --gm-gray-500: #80868b;
+  --gm-gray-700: #5f6368;
+  --gm-gray-900: #202124;
+  --gm-text: #202124;
+  --gm-text-sec: #5f6368;
+  --gm-border: #e0e0e0;
+  --gm-compose-btn: #c2e7ff;
+  --gm-star: #f4b400;
+
+  /* App accent */
+  --app-dark: #0b1120;
+  --app-surface: #111827;
+  --app-card: #1a2235;
+  --app-border: rgba(255,255,255,0.08);
+  --app-green: #00e676;
+  --app-red: #ff3d57;
+  --app-orange: #ffab00;
+  --app-blue: #448aff;
+  --app-purple: #b388ff;
+  --app-cyan: #00e5ff;
+  --app-text: #e8eaf0;
+  --app-text-dim: #8892a4;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Sora', -apple-system, sans-serif; background: var(--gm-bg); overflow-x: hidden; }
+
+/* ═══════════════════════════════════════════
+   VIEW MANAGEMENT
+   ═══════════════════════════════════════════ */
+.view { display:none; min-height:100vh; }
+.view.active { display:block; animation: viewIn 0.4s ease; }
+@keyframes viewIn { from{opacity:0;transform:translateY(15px);} to{opacity:1;transform:translateY(0);} }
+
+/* ═══════════════════════════════════════════
+   VIEW 1: WELCOME / LOBBY
+   ═══════════════════════════════════════════ */
+.lobby {
+  background: var(--app-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.lobby-bg {
+  position: absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 50% 40% at 15% 20%, rgba(0,230,118,0.06), transparent),
+    radial-gradient(ellipse 40% 50% at 85% 80%, rgba(255,61,87,0.05), transparent);
+}
+.lobby-grid {
+  position:absolute;inset:0;pointer-events:none;opacity:0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 0h40v40H0z' fill='none' stroke='%2300e676' stroke-width='0.5'/%3E%3C/svg%3E");
+}
+
+.lobby-card {
+  position:relative; z-index:1;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 20px;
+  padding: 3rem;
+  width: 95%;
+  max-width: 520px;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+}
+
+.lobby-logo {
+  text-align:center; margin-bottom:2rem;
+}
+.lobby-logo i {
+  font-size: 2.5rem;
+  color: var(--app-green);
+  filter: drop-shadow(0 0 20px rgba(0,230,118,0.3));
+  margin-bottom: 0.8rem;
+  display: block;
+}
+.lobby-logo h1 {
+  color: #fff;
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 0.3rem;
+}
+.lobby-logo p {
+  color: var(--app-text-dim);
+  font-size: 0.85rem;
+}
+
+.form-group {
+  margin-bottom: 1.2rem;
+}
+.form-label {
+  display: block;
+  color: var(--app-text-dim);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 0.5rem;
+}
+.form-input, .form-select {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  color: var(--app-text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.3s;
+}
+.form-input:focus, .form-select:focus {
+  border-color: var(--app-green);
+  box-shadow: 0 0 0 3px rgba(0,230,118,0.1);
+}
+.form-input::placeholder { color: rgba(255,255,255,0.2); }
+.form-select option { background: var(--app-surface); color: var(--app-text); }
+
+.form-row { display: flex; gap: 0.8rem; }
+.form-row .form-group { flex: 1; }
+
+.btn-start {
+  width: 100%;
+  padding: 1rem;
+  background: var(--app-green);
+  color: var(--app-dark);
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,230,118,0.3); }
+.btn-start:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
+
+.lobby-admin-link {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+.lobby-admin-link a {
+  color: var(--app-text-dim);
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: color 0.3s;
+}
+.lobby-admin-link a:hover { color: var(--app-green); }
+
+.add-member-area {
+  margin-top: 0.3rem;
+}
+.members-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+.member-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(0,230,118,0.1);
+  border: 1px solid rgba(0,230,118,0.2);
+  color: var(--app-green);
+  padding: 0.3rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.member-chip .remove-member {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  font-size: 0.7rem;
+}
+.member-chip .remove-member:hover { opacity: 1; }
+
+.add-member-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.add-member-row .form-input { flex: 1; padding: 0.6rem 0.8rem; font-size: 0.85rem; }
+.btn-add-member {
+  padding: 0.6rem 1rem;
+  background: rgba(0,230,118,0.12);
+  border: 1px solid rgba(0,230,118,0.2);
+  color: var(--app-green);
+  border-radius: 8px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════
+   VIEW 2: GMAIL SIMULATOR
+   ═══════════════════════════════════════════ */
+.gmail-app {
+  background: var(--gm-bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Gmail Top Bar */
+.gmail-topbar {
+  background: var(--gm-white);
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--gm-gray-200);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.gmail-menu-btn {
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: none; cursor: pointer;
+  border-radius: 50%;
+  color: var(--gm-gray-700);
+  font-size: 1.2rem;
+}
+.gmail-menu-btn:hover { background: var(--gm-gray-100); }
+
+.gmail-logo-area {
+  display: flex; align-items: center; gap: 4px;
+  margin-left: 4px; margin-right: 30px;
+  min-width: 200px;
+}
+.gmail-logo-img {
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+.gmail-logo-img span {
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--gm-gray-700);
+  letter-spacing: -0.5px;
+}
+.gmail-logo-img .g-red { color: #ea4335; }
+.gmail-logo-img .g-yellow { color: #fbbc05; }
+.gmail-logo-img .g-blue { color: #4285f4; }
+.gmail-logo-img .g-green { color: #34a853; }
+
+.gmail-search {
+  flex: 1;
+  max-width: 720px;
+  position: relative;
+}
+.gmail-search input {
+  width: 100%;
+  height: 48px;
+  background: var(--gm-gray-100);
+  border: none;
+  border-radius: 24px;
+  padding: 0 50px;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--gm-text);
+  outline: none;
+}
+.gmail-search input:focus { background: var(--gm-white); box-shadow: 0 1px 6px rgba(32,33,36,0.28); }
+.gmail-search i {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gm-gray-700);
+  font-size: 1.1rem;
+}
+
+.gmail-topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.gmail-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--gm-blue);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* Mission Bar */
+.mission-bar {
+  background: #1a2235;
+  color: #fff;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  position: sticky;
+  top: 64px;
+  z-index: 99;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.mission-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.mission-shield {
+  width: 40px; height: 40px;
+  background: rgba(0,230,118,0.15);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--app-green);
+  font-size: 1.1rem;
+}
+.mission-info h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.mission-info span {
+  font-size: 0.75rem;
+  color: var(--app-text-dim);
+}
+.mission-center {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.mission-stat {
+  text-align: center;
+}
+.mission-stat-val {
+  font-family: 'Fira Code', monospace;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.mission-stat-lbl {
+  font-size: 0.65rem;
+  color: var(--app-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.mission-timer {
+  color: var(--app-green);
+}
+.mission-score {
+  color: var(--app-cyan);
+}
+.mission-right {}
+
+.email-counter-pill {
+  background: rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Gmail main layout */
+.gmail-main {
+  display: flex;
+  flex: 1;
+}
+
+/* Gmail sidebar */
+.gmail-sidebar {
+  width: 256px;
+  padding: 8px 12px;
+  flex-shrink: 0;
+}
+.gmail-compose-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px;
+  height: 56px;
+  background: var(--gm-compose-btn);
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--gm-text);
+  margin-bottom: 12px;
+  width: auto;
+  transition: box-shadow 0.2s;
+}
+.gmail-compose-btn:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.gmail-compose-btn i { font-size: 1.3rem; }
+
+.gmail-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  height: 32px;
+  border-radius: 0 16px 16px 0;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--gm-gray-700);
+  transition: background 0.15s;
+  position: relative;
+}
+.gmail-nav-item:hover { background: var(--gm-gray-200); }
+.gmail-nav-item.active { background: #d3e3fd; color: var(--gm-text); font-weight: 700; }
+.gmail-nav-item i { width: 20px; text-align: center; font-size: 1rem; }
+.gmail-nav-badge {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.gmail-nav-item.active .gmail-nav-badge { color: var(--gm-text); }
+
+/* Email list area */
+.gmail-content {
+  flex: 1;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Email list toolbar */
+.email-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px 4px 16px;
+  border-bottom: 1px solid var(--gm-gray-200);
+  background: var(--gm-white);
+  min-height: 48px;
+  gap: 4px;
+}
+.toolbar-checkbox {
+  width: 20px; height: 20px;
+  border: 2px solid var(--gm-gray-500);
+  border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  margin-right: 8px;
+}
+.toolbar-btn {
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: none; cursor: pointer;
+  border-radius: 50%;
+  color: var(--gm-gray-700);
+  font-size: 0.95rem;
+}
+.toolbar-btn:hover { background: var(--gm-gray-100); }
+.toolbar-divider { width: 1px; height: 20px; background: var(--gm-gray-300); margin: 0 4px; }
+.toolbar-right { margin-left: auto; font-size: 0.8rem; color: var(--gm-gray-500); }
+
+/* Email rows */
+.email-list {
+  background: var(--gm-white);
+  overflow-y: auto;
+}
+.email-row {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  min-height: 44px;
+  border-bottom: 1px solid var(--gm-gray-100);
+  cursor: pointer;
+  transition: background 0.1s, box-shadow 0.1s;
+  position: relative;
+}
+.email-row:hover { box-shadow: inset 1px 0 0 var(--gm-gray-300), 0 1px 2px rgba(0,0,0,0.05); z-index:1; }
+.email-row.unread { background: #fff; }
+.email-row.unread .er-from { font-weight: 700; color: var(--gm-text); }
+.email-row.unread .er-subject-text { font-weight: 700; color: var(--gm-text); }
+.email-row.unread .er-date { font-weight: 700; }
+
+.er-select {
+  display: flex; align-items: center; gap: 8px;
+  min-width: 72px;
+}
+.er-checkbox {
+  width: 18px; height: 18px;
+  border: 2px solid var(--gm-gray-500);
+  border-radius: 2px;
+}
+.er-star {
+  color: var(--gm-gray-300);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.er-star:hover { color: var(--gm-star); }
+.er-important {
+  color: var(--gm-gray-300);
+  font-size: 0.9rem;
+}
+
+.er-from {
+  width: 200px;
+  font-size: 0.88rem;
+  color: var(--gm-gray-700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.er-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  margin: 0 12px;
+}
+.er-subject-text {
+  font-size: 0.88rem;
+  color: var(--gm-text);
+  white-space: nowrap;
+}
+.er-dash { color: var(--gm-gray-500); margin: 0 4px; }
+.er-snippet {
+  font-size: 0.88rem;
+  color: var(--gm-gray-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.er-date {
+  font-size: 0.78rem;
+  color: var(--gm-gray-700);
+  white-space: nowrap;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* Email detail view */
+.email-detail {
+  display: none;
+  background: var(--gm-white);
+  padding: 0 24px 24px;
+  overflow-y: auto;
+  max-height: calc(100vh - 180px);
+}
+.email-detail.active { display: block; animation: viewIn 0.3s ease; }
+
+.ed-back-bar {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  gap: 4px;
+  border-bottom: 1px solid var(--gm-gray-200);
+  margin-bottom: 16px;
+}
+
+.ed-subject {
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--gm-text);
+  margin-bottom: 20px;
+  line-height: 1.3;
+}
+.ed-labels { display: inline-flex; gap: 6px; margin-left: 8px; vertical-align: middle; }
+.ed-label-inbox {
+  background: var(--gm-gray-200);
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--gm-gray-700);
+}
+
+.ed-sender-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.ed-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+.ed-sender-info { flex: 1; }
+.ed-sender-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--gm-text);
+}
+.ed-sender-email {
+  font-size: 0.78rem;
+  color: var(--gm-gray-500);
+}
+.ed-sender-to {
+  font-size: 0.78rem;
+  color: var(--gm-gray-500);
+  margin-top: 2px;
+}
+.ed-date-area {
+  font-size: 0.78rem;
+  color: var(--gm-gray-500);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.ed-body {
+  padding: 0 0 0 56px;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--gm-text);
+}
+.ed-body p { margin-bottom: 12px; }
+.ed-body a {
+  color: var(--gm-blue);
+  text-decoration: none;
+}
+.ed-body a:hover { text-decoration: underline; }
+
+/* Suspicious elements highlighting */
+.phish-target {
+  position: relative;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.25s;
+}
+.phish-target:hover { background: rgba(217,48,37,0.08); }
+.phish-target.found {
+  background: rgba(217,48,37,0.12);
+  outline: 2px solid var(--gm-red);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.phish-target.found::after {
+  content: '⚠';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  font-size: 0.7rem;
+  background: var(--gm-red);
+  color: #fff;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Verdict buttons */
+.verdict-bar {
+  display: none;
+  padding: 16px 0 16px 56px;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  border-top: 1px solid var(--gm-gray-200);
+  margin-top: 20px;
+}
+.verdict-bar.active { display: flex; }
+
+.verdict-btn {
+  padding: 10px 24px;
+  border-radius: 24px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+}
+.verdict-phish {
+  background: var(--gm-red-bg);
+  color: var(--gm-red);
+}
+.verdict-phish:hover { background: #f8d0cc; }
+.verdict-legit {
+  background: var(--gm-green-bg);
+  color: var(--gm-green);
+}
+.verdict-legit:hover { background: #c8e6c9; }
+
+.phish-hint-count {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.8rem;
+  color: var(--gm-gray-500);
+  margin-left: auto;
+}
+
+/* Feedback toast */
+.gm-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  z-index: 10000;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+  max-width: 500px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gm-toast.show { transform: translateX(-50%) translateY(0); }
+.gm-toast.correct { background: #188038; color: #fff; }
+.gm-toast.wrong { background: #d93025; color: #fff; }
+.gm-toast.info { background: #1a73e8; color: #fff; }
+.gm-toast.clue { background: #202124; color: #fff; }
+
+/* ═══════════════════════════════════════════
+   VIEW 3: RESULTS
+   ═══════════════════════════════════════════ */
+.results-view {
+  background: var(--app-dark);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.results-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 20px;
+  padding: 3rem;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+}
+.results-icon { font-size: 4rem; margin-bottom: 1rem; }
+.results-title { color: #fff; font-size: 1.6rem; font-weight: 800; margin-bottom: 0.5rem; }
+.results-subtitle { color: var(--app-text-dim); margin-bottom: 2rem; }
+
+.results-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.rs-item {
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  padding: 1.2rem;
+  border: 1px solid var(--app-border);
+}
+.rs-val {
+  font-family: 'Fira Code', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+}
+.rs-lbl {
+  font-size: 0.7rem;
+  color: var(--app-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 0.3rem;
+}
+
+.results-detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+  margin-bottom: 2rem;
+}
+.rd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+}
+.rd-email-name { color: var(--app-text); font-size: 0.85rem; font-weight: 500; }
+.rd-badge {
+  padding: 0.2rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.rd-badge.correct { background: rgba(0,230,118,0.15); color: var(--app-green); }
+.rd-badge.wrong { background: rgba(255,61,87,0.15); color: var(--app-red); }
+
+.btn-back-lobby {
+  padding: 0.9rem 2rem;
+  background: var(--app-green);
+  color: var(--app-dark);
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* ═══════════════════════════════════════════
+   VIEW 4: ADMIN LOGIN
+   ═══════════════════════════════════════════ */
+.admin-login-view {
+  background: var(--app-dark);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.admin-login-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 20px;
+  padding: 3rem;
+  max-width: 420px;
+  width: 95%;
+}
+.admin-login-card h2 {
+  color: #fff;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+.admin-login-card .subtitle {
+  text-align: center;
+  color: var(--app-text-dim);
+  font-size: 0.85rem;
+  margin-bottom: 2rem;
+}
+.login-error {
+  background: rgba(255,61,87,0.1);
+  border: 1px solid rgba(255,61,87,0.2);
+  color: var(--app-red);
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  margin-bottom: 1rem;
+  display: none;
+}
+
+/* ═══════════════════════════════════════════
+   VIEW 5: ADMIN DASHBOARD
+   ═══════════════════════════════════════════ */
+.dashboard-view {
+  background: var(--app-dark);
+  min-height: 100vh;
+}
+
+.dash-topbar {
+  background: var(--app-surface);
+  border-bottom: 1px solid var(--app-border);
+  padding: 0 2rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.dash-brand {
+  display: flex; align-items: center; gap: 0.6rem;
+  color: var(--app-green);
+  font-weight: 700;
+}
+.dash-brand i { font-size: 1.2rem; }
+.dash-actions { display: flex; gap: 0.8rem; align-items: center; }
+.dash-btn {
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  border: 1px solid var(--app-border);
+  background: transparent;
+  color: var(--app-text-dim);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.dash-btn:hover { border-color: var(--app-green); color: var(--app-green); }
+.dash-btn.danger:hover { border-color: var(--app-red); color: var(--app-red); }
+
+.dash-body {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.dash-header {
+  margin-bottom: 2rem;
+}
+.dash-header h1 {
+  color: #fff;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 0.3rem;
+}
+.dash-header p { color: var(--app-text-dim); }
+
+/* Course filter tabs */
+.course-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+.course-tab {
+  padding: 0.5rem 1.2rem;
+  border-radius: 20px;
+  border: 1px solid var(--app-border);
+  background: transparent;
+  color: var(--app-text-dim);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.course-tab:hover { border-color: var(--app-green); color: var(--app-green); }
+.course-tab.active {
+  background: var(--app-green);
+  color: var(--app-dark);
+  border-color: var(--app-green);
+}
+
+/* Summary stats */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.dash-stat-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  padding: 1.5rem;
+}
+.dsc-label {
+  font-size: 0.7rem;
+  color: var(--app-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 0.5rem;
+}
+.dsc-value {
+  font-family: 'Fira Code', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+}
+.dsc-sub { font-size: 0.78rem; color: var(--app-text-dim); margin-top: 0.3rem; }
+
+/* Groups table */
+.groups-table-wrap {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+.gt-header {
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--app-border);
+}
+.gt-header h3 { color: #fff; font-size: 1rem; }
+
+.gt-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.gt-table thead th {
+  padding: 0.8rem 1.2rem;
+  text-align: left;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--app-text-dim);
+  border-bottom: 1px solid var(--app-border);
+  background: rgba(0,0,0,0.2);
+}
+.gt-table tbody td {
+  padding: 0.9rem 1.2rem;
+  font-size: 0.85rem;
+  color: var(--app-text);
+  border-bottom: 1px solid var(--app-border);
+}
+.gt-table tbody tr:last-child td { border-bottom: none; }
+.gt-table tbody tr:hover td { background: rgba(0,230,118,0.03); }
+
+.rank-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%; font-weight: 800; font-size: 0.82rem;
+}
+.rank-1 { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; }
+.rank-2 { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); color: #000; }
+.rank-3 { background: linear-gradient(135deg, #cd7f32, #a0522d); color: #fff; }
+.rank-other { background: rgba(255,255,255,0.08); color: var(--app-text-dim); }
+
+.score-bar {
+  width: 100px;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+.score-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.members-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.member-mini {
+  background: rgba(0,230,118,0.1);
+  color: var(--app-green);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.verdict-cell { font-size: 0.82rem; }
+
+.no-data {
+  text-align: center;
+  padding: 3rem;
+  color: var(--app-text-dim);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .gmail-sidebar { display: none; }
+  .gmail-search { display: none; }
+  .gmail-logo-area { min-width: auto; margin-right: 8px; }
+  .er-from { width: 120px; }
+  .ed-body { padding-left: 0; }
+  .verdict-bar { padding-left: 0; }
+  .results-stats { grid-template-columns: 1fr; }
+  .dash-stats { grid-template-columns: 1fr 1fr; }
+  .mission-center { display: none; }
+}
+
+@media (max-width: 480px) {
+  .lobby-card { padding: 2rem 1.5rem; }
+  .er-content { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     VIEW 1: LOBBY (Join / Create Group)
+     ══════════════════════════════════ -->
+<div class="view active" id="viewLobby">
+  <div class="lobby">
+    <div class="lobby-bg"></div>
+    <div class="lobby-grid"></div>
+    <div class="lobby-card">
+      <div class="lobby-logo">
+        <i class="fas fa-crosshairs"></i>
+        <h1>Cazadores de Phishing</h1>
+        <p>Simulador Interactivo de Ciberseguridad</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Curso</label>
+        <select class="form-select" id="courseSelect">
+          <option value="">Selecciona tu curso...</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="newCourseGroup" style="display:none;">
+        <label class="form-label">Nombre del nuevo curso</label>
+        <input type="text" class="form-input" id="newCourseName" placeholder="Ej: Ing. Sistemas - Grupo 3A">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nombre del Escuadrón</label>
+        <input type="text" class="form-input" id="groupName" placeholder="Ej: CyberNinjas, FireWallers...">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Integrantes del escuadrón</label>
+        <div class="members-list" id="membersList"></div>
+        <div class="add-member-row">
+          <input type="text" class="form-input" id="memberInput" placeholder="Nombre del integrante" onkeydown="if(event.key==='Enter')addMember()">
+          <button class="btn-add-member" onclick="addMember()"><i class="fas fa-plus"></i> Añadir</button>
+        </div>
+      </div>
+
+      <button class="btn-start" id="btnStart" onclick="startSimulation()" disabled>
+        <i class="fas fa-shield-halved"></i> Iniciar Misión
+      </button>
+
+      <div class="lobby-admin-link">
+        <a href="#" onclick="showView('viewAdminLogin')"><i class="fas fa-lock"></i> Acceso Tutor / Dashboard</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     VIEW 2: GMAIL SIMULATOR
+     ══════════════════════════════════ -->
+<div class="view" id="viewSimulator">
+  <div class="gmail-app">
+    <!-- Gmail topbar -->
+    <div class="gmail-topbar">
+      <button class="gmail-menu-btn"><i class="fas fa-bars"></i></button>
+      <div class="gmail-logo-area">
+        <div class="gmail-logo-img">
+          <svg viewBox="0 0 75 24" width="75" height="24" style="margin-right:4px;">
+            <path d="M0 0h6l6 14L18 0h6v24h-5V8l-5.5 13h-3L10 8v16H5L0 0z" fill="#5f6368"/>
+          </svg>
+          <span><span class="g-blue">G</span><span class="g-red">m</span><span class="g-yellow">a</span><span class="g-blue">i</span><span class="g-green">l</span></span>
+        </div>
+      </div>
+      <div class="gmail-search">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Buscar en correos">
+      </div>
+      <div class="gmail-topbar-right">
+        <button class="gmail-menu-btn"><i class="fas fa-question-circle"></i></button>
+        <button class="gmail-menu-btn"><i class="fas fa-cog"></i></button>
+        <button class="gmail-menu-btn"><i class="fas fa-th"></i></button>
+        <div class="gmail-avatar" id="gmailAvatar">E</div>
+      </div>
+    </div>
+
+    <!-- Mission bar -->
+    <div class="mission-bar">
+      <div class="mission-left">
+        <div class="mission-shield"><i class="fas fa-crosshairs"></i></div>
+        <div class="mission-info">
+          <h3 id="missionGroup">Escuadrón</h3>
+          <span id="missionCourse">Curso</span>
+        </div>
+      </div>
+      <div class="mission-center">
+        <div class="mission-stat">
+          <div class="mission-stat-val mission-timer" id="missionTimer">05:00</div>
+          <div class="mission-stat-lbl">Tiempo</div>
+        </div>
+        <div class="mission-stat">
+          <div class="mission-stat-val mission-score" id="missionScore">0</div>
+          <div class="mission-stat-lbl">Puntos</div>
+        </div>
+      </div>
+      <div class="mission-right">
+        <div class="email-counter-pill">Correo <span id="emailCurrent">1</span> de <span id="emailTotal">6</span></div>
+      </div>
+    </div>
+
+    <div class="gmail-main">
+      <!-- Sidebar -->
+      <div class="gmail-sidebar">
+        <button class="gmail-compose-btn"><i class="fas fa-pen"></i> Redactar</button>
+        <div class="gmail-nav-item active"><i class="fas fa-inbox"></i> Recibidos <span class="gmail-nav-badge" id="inboxBadge">6</span></div>
+        <div class="gmail-nav-item"><i class="fas fa-star"></i> Destacados</div>
+        <div class="gmail-nav-item"><i class="fas fa-clock"></i> Pospuestos</div>
+        <div class="gmail-nav-item"><i class="fas fa-paper-plane"></i> Enviados</div>
+        <div class="gmail-nav-item"><i class="fas fa-file"></i> Borradores</div>
+        <div class="gmail-nav-item" style="margin-top:12px;"><i class="fas fa-tag" style="color:#d93025;"></i> Phishing <span class="gmail-nav-badge" style="color:#d93025;" id="phishBadge">0</span></div>
+        <div class="gmail-nav-item"><i class="fas fa-check-circle" style="color:#188038;"></i> Legítimos <span class="gmail-nav-badge" style="color:#188038;" id="legitBadge">0</span></div>
+      </div>
+
+      <!-- Email content -->
+      <div class="gmail-content">
+        <!-- List view -->
+        <div id="emailListView">
+          <div class="email-toolbar">
+            <div class="toolbar-checkbox"></div>
+            <button class="toolbar-btn"><i class="fas fa-redo"></i></button>
+            <button class="toolbar-btn"><i class="fas fa-ellipsis-v"></i></button>
+            <div class="toolbar-divider"></div>
+            <div class="toolbar-right"><span id="toolbarCount">1-6</span> de <span id="toolbarTotal">6</span></div>
+          </div>
+          <div class="email-list" id="emailListContainer">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Detail view -->
+        <div class="email-detail" id="emailDetailView">
+          <div class="ed-back-bar">
+            <button class="toolbar-btn" onclick="backToList()"><i class="fas fa-arrow-left"></i></button>
+            <button class="toolbar-btn"><i class="fas fa-archive"></i></button>
+            <button class="toolbar-btn"><i class="fas fa-exclamation-circle"></i></button>
+            <button class="toolbar-btn"><i class="fas fa-trash"></i></button>
+          </div>
+          <div id="emailDetailContent">
+            <!-- Populated by JS -->
+          </div>
+          <div class="verdict-bar active" id="verdictBar">
+            <button class="verdict-btn verdict-phish" onclick="submitVerdict('phishing')">
+              <i class="fas fa-exclamation-triangle"></i> Es Phishing
+            </button>
+            <button class="verdict-btn verdict-legit" onclick="submitVerdict('legit')">
+              <i class="fas fa-check-circle"></i> Es Legítimo
+            </button>
+            <div class="phish-hint-count">
+              Pistas encontradas: <span id="hintCount">0</span>/<span id="hintTotal">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     VIEW 3: RESULTS
+     ══════════════════════════════════ -->
+<div class="view" id="viewResults">
+  <div class="results-view">
+    <div class="results-card">
+      <div class="results-icon" id="resultsIcon">🏆</div>
+      <h2 class="results-title" id="resultsTitle">¡Misión Completa!</h2>
+      <p class="results-subtitle" id="resultsSubtitle"></p>
+      <div class="results-stats" id="resultsStats"></div>
+      <div class="results-detail-grid" id="resultsDetail"></div>
+      <button class="btn-back-lobby" onclick="resetAndGoLobby()"><i class="fas fa-rotate-left"></i> Volver al Inicio</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     VIEW 4: ADMIN LOGIN
+     ══════════════════════════════════ -->
+<div class="view" id="viewAdminLogin">
+  <div class="admin-login-view">
+    <div class="admin-login-card">
+      <div style="text-align:center;margin-bottom:1.5rem;">
+        <i class="fas fa-shield-halved" style="font-size:2rem;color:var(--app-green);"></i>
+      </div>
+      <h2>Panel del Tutor</h2>
+      <p class="subtitle">Ingresa las credenciales para ver los resultados</p>
+      <div class="login-error" id="loginError">Contraseña incorrecta</div>
+      <div class="form-group">
+        <label class="form-label">Usuario</label>
+        <input type="text" class="form-input" id="adminUser" placeholder="tutor" value="tutor">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" class="form-input" id="adminPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()">
+      </div>
+      <button class="btn-start" onclick="adminLogin()"><i class="fas fa-lock-open"></i> Ingresar</button>
+      <div class="lobby-admin-link" style="margin-top:1rem;">
+        <a href="#" onclick="showView('viewLobby')"><i class="fas fa-arrow-left"></i> Volver al simulador</a>
+      </div>
+      <div style="margin-top:1.5rem;padding:1rem;background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.15);border-radius:10px;">
+        <p style="color:var(--app-green);font-size:0.78rem;font-weight:600;">Credenciales por defecto:</p>
+        <p style="color:var(--app-text-dim);font-size:0.78rem;font-family:'Fira Code',monospace;margin-top:0.3rem;">Usuario: tutor<br>Contraseña: guardian2024</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     VIEW 5: ADMIN DASHBOARD
+     ══════════════════════════════════ -->
+<div class="view" id="viewDashboard">
+  <div class="dashboard-view">
+    <div class="dash-topbar">
+      <div class="dash-brand"><i class="fas fa-shield-halved"></i> Dashboard Tutor</div>
+      <div class="dash-actions">
+        <button class="dash-btn" onclick="exportJSON()"><i class="fas fa-download"></i> Exportar JSON</button>
+        <button class="dash-btn" onclick="refreshDashboard()"><i class="fas fa-sync"></i> Actualizar</button>
+        <button class="dash-btn danger" onclick="clearCourseData()"><i class="fas fa-trash"></i> Limpiar curso</button>
+        <button class="dash-btn" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Salir</button>
+      </div>
+    </div>
+    <div class="dash-body">
+      <div class="dash-header">
+        <h1>Resultados de los Cazadores</h1>
+        <p>Panel de control con resultados por curso y escuadrón</p>
+      </div>
+
+      <div class="course-tabs" id="courseTabs"></div>
+
+      <div class="dash-stats" id="dashStats"></div>
+
+      <div class="groups-table-wrap">
+        <div class="gt-header">
+          <h3><i class="fas fa-trophy" style="color:var(--app-green);margin-right:0.5rem;"></i> Ranking de Escuadrones</h3>
+        </div>
+        <div id="groupsTableBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="gm-toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   DATA LAYER - JSON Storage via localStorage
+   ═══════════════════════════════════════════ */
+const DB_KEY = 'guardianes_phishing_db';
+const ADMIN_CREDS = { user: 'tutor', pass: 'guardian2024' };
+
+function getDB() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    if (!raw) return initDB();
+    return JSON.parse(raw);
+  } catch { return initDB(); }
+}
+
+function saveDB(db) {
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+}
+
+function initDB() {
+  const db = {
+    courses: [
+      { id: 'c1', name: 'Ing. Sistemas - Grupo 01' },
+      { id: 'c2', name: 'Ing. Sistemas - Grupo 02' },
+      { id: 'c3', name: 'Arquitectura de Computadores' },
+      { id: 'c4', name: 'Redes y Comunicaciones' }
+    ],
+    groups: [],
+    meta: { created: new Date().toISOString(), version: '2.0' }
+  };
+  saveDB(db);
+  return db;
+}
+
+/* ═══════════════════════════════════════════
+   EMAIL DATABASE
+   ═══════════════════════════════════════════ */
+const EMAILS = [
+  {
+    id: 'e1',
+    isPhishing: true,
+    from: 'Soporte Bancolombia <soporte@bancolombl4.com>',
+    fromDisplay: 'Soporte Bancolombia',
+    fromEmail: 'soporte@bancolombl4.com',
+    avatarColor: '#0052cc',
+    avatarLetter: 'B',
+    to: 'para mí',
+    subject: '¡URGENTE! Su cuenta será suspendida en 24 horas',
+    snippet: 'Hemos detectado actividad sospechosa en su cuenta bancaria. Para evitar el bloqueo...',
+    date: '10:23',
+    dateDetail: '21 de febrero de 2026, 10:23 a.m.',
+    unread: true,
+    body: `<p>Estimado cliente,</p>
+<p>Hemos detectado <span class="phish-target" data-hint="Lenguaje alarmista: usa el miedo para que actúes impulsivamente sin verificar">actividad sospechosa en su cuenta bancaria</span>. Para evitar el bloqueo permanente de su cuenta, necesitamos que verifique su identidad de manera inmediata.</p>
+<p>Haga clic en el siguiente enlace seguro para confirmar sus datos:</p>
+<p><a href="#" onclick="return false" class="phish-target" data-hint="Enlace acortado con bit.ly: oculta la URL real. Un banco NUNCA usaría un acortador de enlaces">https://bit.ly/bancol-verificar-2024</a></p>
+<p><span class="phish-target" data-hint="Amenaza con bloqueo permanente: presión psicológica para actuar sin pensar. Un banco real nunca bloquea cuentas por correo">Si no completa la verificación en 24 horas, su cuenta será bloqueada permanentemente y perderá acceso a sus fondos.</span></p>
+<p>Atentamente,<br><span class="phish-target" data-hint="Firma genérica sin nombre, cargo ni teléfono de contacto. Un banco real siempre incluye datos del asesor responsable">Equipo de Soporte Bancolombia</span></p>`,
+    hints: ['bancolombl4.com', 'alarmista', 'bit.ly', 'bloqueo permanente', 'firma genérica'],
+    fromHint: 'El dominio es FALSO: "bancolombl4.com" usa el número 4 en lugar de la letra "a". El dominio real es bancolombia.com'
+  },
+  {
+    id: 'e2',
+    isPhishing: false,
+    from: 'Google <no-reply@accounts.google.com>',
+    fromDisplay: 'Google',
+    fromEmail: 'no-reply@accounts.google.com',
+    avatarColor: '#4285f4',
+    avatarLetter: 'G',
+    to: 'para mí',
+    subject: 'Alerta de seguridad: nuevo inicio de sesión',
+    snippet: 'Detectamos un nuevo inicio de sesión en tu cuenta de Google desde un dispositivo...',
+    date: '9:45',
+    dateDetail: '21 de febrero de 2026, 9:45 a.m.',
+    unread: true,
+    body: `<p>Hola,</p>
+<p>Detectamos un nuevo inicio de sesión en tu cuenta de Google.</p>
+<p><strong>Dispositivo:</strong> Samsung Galaxy S24<br><strong>Ubicación:</strong> Bogotá, Colombia<br><strong>Hora:</strong> 21 de febrero de 2026, 9:42 a.m.</p>
+<p>Si fuiste tú, no necesitas hacer nada. Si no reconoces esta actividad, te recomendamos <a href="#" onclick="return false">revisar la actividad de tu cuenta</a> y cambiar tu contraseña.</p>
+<p>Saludos,<br>El equipo de seguridad de Google</p>
+<p style="font-size:0.78rem;color:#5f6368;margin-top:20px;">Este correo fue enviado a tu dirección de correo de Google. Para más información sobre alertas de seguridad, visita la <a href="#" onclick="return false">página de ayuda de Google</a>.<br>Google LLC, 1600 Amphitheatre Parkway, Mountain View, CA 94043, USA</p>`,
+    hints: [],
+    fromHint: null
+  },
+  {
+    id: 'e3',
+    isPhishing: true,
+    from: 'Netflix <confirmacion@netfllx-pagos.com>',
+    fromDisplay: 'Netflix',
+    fromEmail: 'confirmacion@netfllx-pagos.com',
+    avatarColor: '#e50914',
+    avatarLetter: 'N',
+    to: 'para mí',
+    subject: 'Problema con tu pago - Actualiza tu información',
+    snippet: 'No pudimos procesar tu último pago. Si no actualizas tu método de pago en las próximas...',
+    date: '8:17',
+    dateDetail: '21 de febrero de 2026, 8:17 a.m.',
+    unread: true,
+    body: `<p>Hola,</p>
+<p>No pudimos procesar tu último pago de Netflix. <span class="phish-target" data-hint="Amenaza de suspensión: técnica de urgencia. Netflix real da 30 días de gracia, no 48 horas">Si no actualizas tu método de pago en las próximas 48 horas, tu cuenta será suspendida.</span></p>
+<p>Para actualizar tu información de pago, haz clic aquí:</p>
+<p><a href="#" onclick="return false" class="phish-target" data-hint="URL sospechosa: 'netflx-secure.com' NO es el dominio real de Netflix (netflix.com). Note la 'i' faltante y el subdominio falso">https://netflx-secure.com/actualizar-pago?id=928371</a></p>
+<p><span class="phish-target" data-hint="Solicitan datos de tarjeta por enlace: Netflix NUNCA pide que ingreses datos de tarjeta a través de un enlace en correo">Necesitarás tener a mano tu tarjeta de crédito o débito para completar la verificación.</span></p>
+<p>Gracias,<br><span class="phish-target" data-hint="El equipo de 'Netflix Latam' no existe como firma oficial. Netflix firma como 'El equipo de Netflix' sin especificación regional">El equipo de Netflix Latam</span></p>`,
+    hints: ['netfllx-pagos.com', '48 horas', 'netflx-secure.com', 'datos tarjeta', 'Netflix Latam'],
+    fromHint: 'Dominio FALSO: "netfllx-pagos.com" tiene doble L y es un dominio inventado. El real es netflix.com'
+  },
+  {
+    id: 'e4',
+    isPhishing: false,
+    from: 'Universidad Remington <notificaciones@uniremington.edu.co>',
+    fromDisplay: 'Universidad Remington',
+    fromEmail: 'notificaciones@uniremington.edu.co',
+    avatarColor: '#1b5e20',
+    avatarLetter: 'R',
+    to: 'para mí',
+    subject: 'Recordatorio: Inscripción de materias período 2026-1',
+    snippet: 'Estimado estudiante, le recordamos que el periodo de inscripción de materias...',
+    date: 'ayer',
+    dateDetail: '20 de febrero de 2026, 3:15 p.m.',
+    unread: false,
+    body: `<p>Estimado estudiante,</p>
+<p>Le recordamos que el periodo de inscripción de materias para <strong>2026-1</strong> estará habilitado del <strong>24 de febrero al 7 de marzo de 2026</strong>.</p>
+<p>Puede realizar su inscripción a través del portal académico: <a href="#" onclick="return false">https://portal.uniremington.edu.co</a></p>
+<p>Requisitos:<br>• Estar a paz y salvo financieramente<br>• Haber completado la evaluación docente del periodo anterior<br>• Consultar los horarios disponibles en el módulo de oferta académica</p>
+<p>Para cualquier duda, puede contactar a la Secretaría Académica:<br>📞 (604) 322 1000 ext. 2150<br>📧 secretaria.academica@uniremington.edu.co</p>
+<p>Cordialmente,<br><strong>Secretaría Académica</strong><br>Corporación Universitaria Remington<br>NIT: 811.002.566-6<br>Calle 51 #51-27, Medellín</p>`,
+    hints: [],
+    fromHint: null
+  },
+  {
+    id: 'e5',
+    isPhishing: true,
+    from: 'WhatsApp <verify@wh4tsapp-security.net>',
+    fromDisplay: 'WhatsApp',
+    fromEmail: 'verify@wh4tsapp-security.net',
+    avatarColor: '#25d366',
+    avatarLetter: 'W',
+    to: 'para mí',
+    subject: 'Tu cuenta de WhatsApp ha sido reportada',
+    snippet: 'Hemos recibido reportes sobre tu cuenta. Si no verificas tu identidad...',
+    date: 'ayer',
+    dateDetail: '20 de febrero de 2026, 11:08 a.m.',
+    unread: true,
+    body: `<p><span class="phish-target" data-hint="WhatsApp NUNCA envía correos sobre reportes de cuenta. Las notificaciones de seguridad van directamente dentro de la app">Estimado usuario,</span></p>
+<p>Hemos recibido múltiples reportes sobre tu cuenta de WhatsApp. Tu número está siendo investigado por posible uso indebido.</p>
+<p><span class="phish-target" data-hint="Solicitan código de verificación: NADIE legítimo te pedirá tu código de WhatsApp. Este código es SOLO para ti">Para evitar la suspensión permanente, necesitamos que verifiques tu identidad ingresando el código de 6 dígitos que recibirás por SMS.</span></p>
+<p>Verifica tu cuenta ahora: <a href="#" onclick="return false" class="phish-target" data-hint="URL completamente falsa: 'wh4tsapp-verify.com' usa un 4 en lugar de 'a'. El dominio real es whatsapp.com">https://wh4tsapp-verify.com/code</a></p>
+<p><span class="phish-target" data-hint="Plazo de 12 horas: presión de tiempo típica del phishing. WhatsApp no opera con ultimátums por correo">Tienes 12 horas para completar este proceso o tu cuenta será eliminada definitivamente.</span></p>
+<p><span class="phish-target" data-hint="Firma falsa: no existe un 'Centro de Seguridad WhatsApp'. Meta (dueña de WhatsApp) no usa este tipo de firmas">Centro de Seguridad WhatsApp<br>Meta Platforms Inc.</span></p>`,
+    hints: ['wh4tsapp-security.net', 'código SMS', 'wh4tsapp-verify.com', '12 horas', 'Centro de Seguridad'],
+    fromHint: 'Dominio FALSO: "wh4tsapp-security.net" usa un 4 en lugar de la "a" y .net en lugar de .com. WhatsApp no envía correos desde este tipo de dominios'
+  },
+  {
+    id: 'e6',
+    isPhishing: true,
+    from: 'Amazon <pedidos@amaz0n-co.shop>',
+    fromDisplay: 'Amazon',
+    fromEmail: 'pedidos@amaz0n-co.shop',
+    avatarColor: '#ff9900',
+    avatarLetter: 'A',
+    to: 'para mí',
+    subject: 'Confirma tu pedido #AMZ-8827361 o será cancelado',
+    snippet: 'Se realizó un pedido de $2,450,000 COP desde tu cuenta. Si no fuiste tú...',
+    date: '20 feb',
+    dateDetail: '20 de febrero de 2026, 7:33 a.m.',
+    unread: true,
+    body: `<p>Hola,</p>
+<p>Se ha realizado el siguiente pedido desde tu cuenta de Amazon:</p>
+<p style="background:#f5f5f5;padding:12px;border-radius:8px;"><strong>Pedido #AMZ-8827361</strong><br>MacBook Pro 16" M4 Pro<br><span class="phish-target" data-hint="Monto alto para generar pánico: usan una compra cara que NO hiciste para que actúes rápido sin verificar">Total: $2,450,000 COP</span><br>Entrega estimada: 25 de febrero de 2026</p>
+<p><span class="phish-target" data-hint="Técnica de phishing inverso: crean un problema falso (pedido no autorizado) para que TÚ contactes al estafador">Si no realizaste este pedido, es posible que alguien haya accedido a tu cuenta.</span> Cancela inmediatamente:</p>
+<p><a href="#" onclick="return false" class="phish-target" data-hint="URL falsa: 'amaz0n-co.shop' usa un 0 (cero) en lugar de 'o' y un dominio .shop falso. Amazon Colombia es amazon.com.co">https://amaz0n-co.shop/cancelar-pedido</a></p>
+<p><span class="phish-target" data-hint="Piden usuario y contraseña para 'cancelar': una empresa legítima NUNCA pide credenciales a través de un enlace externo">Necesitarás ingresar tu usuario y contraseña de Amazon para verificar tu identidad y cancelar el pedido.</span></p>
+<p>Amazon Colombia<br><span class="phish-target" data-hint="Teléfono falso: este número NO es de Amazon. Los estafadores ponen números propios para continuar la estafa por teléfono">Servicio al Cliente: +57 321 987 6543</span></p>`,
+    hints: ['amaz0n-co.shop', '$2,450,000', 'amaz0n-co.shop/cancelar', 'usuario y contraseña', 'teléfono falso'],
+    fromHint: 'Dominio FALSO: "amaz0n-co.shop" usa un cero (0) en lugar de la letra "o" y .shop no es un dominio de Amazon'
+  }
+];
+
+/* ═══════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════ */
+let state = {
+  currentCourse: null,
+  currentGroup: null,
+  members: [],
+  currentEmailIdx: 0,
+  score: 0,
+  answers: [],
+  hintsFound: {},
+  timerSec: 300,
+  timerInterval: null,
+  emailOrder: [],
+  isAdmin: false,
+  dashCourseFilter: 'all'
+};
+
+/* ═══════════════════════════════════════════
+   VIEW MANAGEMENT
+   ═══════════════════════════════════════════ */
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ═══════════════════════════════════════════
+   LOBBY
+   ═══════════════════════════════════════════ */
+function initLobby() {
+  const db = getDB();
+  const sel = document.getElementById('courseSelect');
+  sel.innerHTML = '<option value="">Selecciona tu curso...</option>';
+  db.courses.forEach(c => {
+    sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+  });
+  sel.innerHTML += '<option value="__new">+ Crear nuevo curso</option>';
+  sel.onchange = function() {
+    document.getElementById('newCourseGroup').style.display = this.value === '__new' ? 'block' : 'none';
+    validateLobby();
+  };
+  state.members = [];
+  document.getElementById('membersList').innerHTML = '';
+  document.getElementById('groupName').value = '';
+  document.getElementById('groupName').oninput = validateLobby;
+  validateLobby();
+}
+
+function addMember() {
+  const inp = document.getElementById('memberInput');
+  const name = inp.value.trim();
+  if (!name) return;
+  if (state.members.length >= 8) return toast('Máximo 8 integrantes por escuadrón', 'info');
+  state.members.push(name);
+  inp.value = '';
+  renderMembers();
+  validateLobby();
+}
+
+function removeMember(idx) {
+  state.members.splice(idx, 1);
+  renderMembers();
+  validateLobby();
+}
+
+function renderMembers() {
+  const container = document.getElementById('membersList');
+  container.innerHTML = state.members.map((m, i) =>
+    `<span class="member-chip">${m} <span class="remove-member" onclick="removeMember(${i})"><i class="fas fa-times"></i></span></span>`
+  ).join('');
+}
+
+function validateLobby() {
+  const course = document.getElementById('courseSelect').value;
+  const group = document.getElementById('groupName').value.trim();
+  const validCourse = course && (course !== '__new' || document.getElementById('newCourseName').value.trim());
+  document.getElementById('btnStart').disabled = !(validCourse && group && state.members.length >= 1);
+}
+
+/* ═══════════════════════════════════════════
+   START SIMULATION
+   ═══════════════════════════════════════════ */
+function startSimulation() {
+  const db = getDB();
+  let courseId = document.getElementById('courseSelect').value;
+
+  if (courseId === '__new') {
+    const name = document.getElementById('newCourseName').value.trim();
+    courseId = 'c_' + Date.now();
+    db.courses.push({ id: courseId, name });
+    saveDB(db);
+  }
+
+  const course = db.courses.find(c => c.id === courseId);
+  const groupName = document.getElementById('groupName').value.trim();
+
+  state.currentCourse = course;
+  state.currentGroup = {
+    id: 'g_' + Date.now(),
+    courseId: course.id,
+    name: groupName,
+    members: [...state.members],
+    score: 0,
+    answers: [],
+    startedAt: new Date().toISOString(),
+    completedAt: null
+  };
+
+  state.currentEmailIdx = 0;
+  state.score = 0;
+  state.answers = [];
+  state.hintsFound = {};
+  state.timerSec = 300;
+  state.emailOrder = shuffleArray([...Array(EMAILS.length).keys()]);
+
+  document.getElementById('missionGroup').textContent = groupName;
+  document.getElementById('missionCourse').textContent = course.name;
+  document.getElementById('gmailAvatar').textContent = groupName[0].toUpperCase();
+  document.getElementById('emailTotal').textContent = EMAILS.length;
+  document.getElementById('toolbarTotal').textContent = EMAILS.length;
+  document.getElementById('inboxBadge').textContent = EMAILS.length;
+  document.getElementById('missionScore').textContent = '0';
+
+  renderEmailList();
+  showView('viewSimulator');
+  startTimer();
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/* ═══════════════════════════════════════════
+   TIMER
+   ═══════════════════════════════════════════ */
+function startTimer() {
+  clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(() => {
+    state.timerSec--;
+    const m = Math.floor(state.timerSec / 60);
+    const s = state.timerSec % 60;
+    document.getElementById('missionTimer').textContent =
+      `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+    if (state.timerSec <= 60) {
+      document.getElementById('missionTimer').style.color = 'var(--app-red)';
+    }
+
+    if (state.timerSec <= 0) {
+      clearInterval(state.timerInterval);
+      finishSimulation();
+    }
+  }, 1000);
+}
+
+/* ═══════════════════════════════════════════
+   EMAIL LIST
+   ═══════════════════════════════════════════ */
+function renderEmailList() {
+  const container = document.getElementById('emailListContainer');
+  container.innerHTML = '';
+
+  state.emailOrder.forEach((emailIdx, i) => {
+    const e = EMAILS[emailIdx];
+    const answered = state.answers.find(a => a.emailId === e.id);
+    const row = document.createElement('div');
+    row.className = `email-row ${e.unread && !answered ? 'unread' : ''}`;
+    if (answered) {
+      row.style.opacity = '0.5';
+      row.style.background = answered.correct ? '#e6f4ea' : '#fce8e6';
+    }
+    row.innerHTML = `
+      <div class="er-select">
+        <div class="er-checkbox"></div>
+        <i class="far fa-star er-star"></i>
+      </div>
+      <div class="er-from">${e.fromDisplay}</div>
+      <div class="er-content">
+        <span class="er-subject-text">${e.subject}</span>
+        <span class="er-dash">—</span>
+        <span class="er-snippet">${e.snippet}</span>
+      </div>
+      <div class="er-date">${e.date}</div>
+    `;
+
+    if (!answered) {
+      row.onclick = () => openEmail(emailIdx);
+    }
+
+    container.appendChild(row);
+  });
+
+  document.getElementById('emailListView').style.display = 'block';
+  document.getElementById('emailDetailView').classList.remove('active');
+
+  const answered = state.answers.length;
+  document.getElementById('toolbarCount').textContent = `${answered} analizados de`;
+}
+
+function openEmail(emailIdx) {
+  const e = EMAILS[emailIdx];
+  if (state.answers.find(a => a.emailId === e.id)) return;
+
+  state.currentEmailIdx = emailIdx;
+  state.hintsFound[e.id] = state.hintsFound[e.id] || new Set();
+
+  document.getElementById('emailListView').style.display = 'none';
+  const detail = document.getElementById('emailDetailView');
+  detail.classList.add('active');
+
+  const totalHints = e.isPhishing ? (e.body.match(/phish-target/g) || []).length : 0;
+  document.getElementById('hintTotal').textContent = totalHints;
+  document.getElementById('hintCount').textContent = state.hintsFound[e.id]?.size || 0;
+
+  const content = document.getElementById('emailDetailContent');
+  content.innerHTML = `
+    <div class="ed-subject">
+      ${e.subject}
+      <span class="ed-labels"><span class="ed-label-inbox">Recibidos</span></span>
+    </div>
+    <div class="ed-sender-row">
+      <div class="ed-avatar" style="background:${e.avatarColor}">${e.avatarLetter}</div>
+      <div class="ed-sender-info">
+        <div class="ed-sender-name">${e.fromDisplay}
+          <span style="font-weight:400;color:#5f6368;font-size:0.82rem;">&lt;<span class="phish-target" ${e.fromHint ? `data-hint="${e.fromHint}"` : ''} ${e.fromHint ? 'onclick="findFromHint(this)"' : ''} style="${e.fromHint ? 'cursor:pointer;' : ''}">${e.fromEmail}</span>&gt;</span>
+        </div>
+        <div class="ed-sender-to">${e.to}</div>
+      </div>
+      <div class="ed-date-area">${e.dateDetail}</div>
+    </div>
+    <div class="ed-body">${e.body}</div>
+  `;
+
+  // Attach hint listeners
+  content.querySelectorAll('.phish-target[data-hint]').forEach(el => {
+    el.addEventListener('click', function() {
+      if (this.classList.contains('found')) return;
+      this.classList.add('found');
+      state.hintsFound[e.id].add(this.dataset.hint);
+      document.getElementById('hintCount').textContent = state.hintsFound[e.id].size;
+      toast('🔍 ' + this.dataset.hint, 'clue');
+    });
+  });
+
+  document.getElementById('emailCurrent').textContent = state.answers.length + 1;
+}
+
+function findFromHint(el) {
+  const e = EMAILS[state.currentEmailIdx];
+  if (!e.fromHint || el.classList.contains('found')) return;
+  el.classList.add('found');
+  state.hintsFound[e.id] = state.hintsFound[e.id] || new Set();
+  state.hintsFound[e.id].add(e.fromHint);
+  document.getElementById('hintCount').textContent = state.hintsFound[e.id].size;
+  toast('🔍 ' + e.fromHint, 'clue');
+}
+
+function backToList() {
+  renderEmailList();
+}
+
+/* ═══════════════════════════════════════════
+   VERDICT
+   ═══════════════════════════════════════════ */
+function submitVerdict(verdict) {
+  const e = EMAILS[state.currentEmailIdx];
+  const correct = (verdict === 'phishing' && e.isPhishing) || (verdict === 'legit' && !e.isPhishing);
+  const hintsCount = state.hintsFound[e.id]?.size || 0;
+
+  let points = 0;
+  if (correct) {
+    points = 10;
+    if (e.isPhishing) points += hintsCount * 5;
+    toast(`✅ ¡Correcto! +${points} puntos${hintsCount > 0 ? ` (${hintsCount} pistas encontradas)` : ''}`, 'correct');
+  } else {
+    points = 0;
+    if (e.isPhishing) {
+      toast('❌ ¡Era Phishing! Este correo tenía señales de alerta', 'wrong');
+    } else {
+      toast('❌ Este correo era legítimo. No todo es phishing, hay que saber distinguir', 'wrong');
+    }
+  }
+
+  state.score += points;
+  state.answers.push({
+    emailId: e.id,
+    emailSubject: e.subject,
+    isPhishing: e.isPhishing,
+    verdict,
+    correct,
+    points,
+    hintsFound: hintsCount
+  });
+
+  document.getElementById('missionScore').textContent = state.score;
+
+  const phishCount = state.answers.filter(a => a.verdict === 'phishing').length;
+  const legitCount = state.answers.filter(a => a.verdict === 'legit').length;
+  document.getElementById('phishBadge').textContent = phishCount;
+  document.getElementById('legitBadge').textContent = legitCount;
+
+  if (state.answers.length >= EMAILS.length) {
+    setTimeout(() => {
+      clearInterval(state.timerInterval);
+      finishSimulation();
+    }, 1500);
+  } else {
+    setTimeout(() => renderEmailList(), 1200);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   FINISH & SAVE
+   ═══════════════════════════════════════════ */
+function finishSimulation() {
+  clearInterval(state.timerInterval);
+
+  // Save to DB
+  state.currentGroup.score = state.score;
+  state.currentGroup.answers = state.answers;
+  state.currentGroup.completedAt = new Date().toISOString();
+  state.currentGroup.timeUsed = 300 - state.timerSec;
+
+  const db = getDB();
+  db.groups.push(state.currentGroup);
+  saveDB(db);
+
+  // Show results
+  const correct = state.answers.filter(a => a.correct).length;
+  const total = state.answers.length;
+  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+  const maxScore = EMAILS.reduce((sum, e) => {
+    if (e.isPhishing) {
+      const hints = (e.body.match(/phish-target/g) || []).length;
+      return sum + 10 + hints * 5;
+    }
+    return sum + 10;
+  }, 0);
+
+  let icon = '🏆', title = '¡Misión Completa!';
+  if (pct >= 80) { icon = '🏆'; title = '¡Guardianes de Élite!'; }
+  else if (pct >= 60) { icon = '🛡️'; title = '¡Buen Trabajo, Guardianes!'; }
+  else if (pct >= 40) { icon = '⚔️'; title = 'Guardianes en Entrenamiento'; }
+  else { icon = '📚'; title = 'Necesitan Más Práctica'; }
+
+  document.getElementById('resultsIcon').textContent = icon;
+  document.getElementById('resultsTitle').textContent = title;
+  document.getElementById('resultsSubtitle').textContent =
+    `${state.currentGroup.name} — ${state.currentCourse.name}`;
+
+  const timeUsed = 300 - state.timerSec;
+  const mins = Math.floor(timeUsed / 60);
+  const secs = timeUsed % 60;
+
+  document.getElementById('resultsStats').innerHTML = `
+    <div class="rs-item">
+      <div class="rs-val" style="color:var(--app-cyan);">${state.score}</div>
+      <div class="rs-lbl">Puntos</div>
+    </div>
+    <div class="rs-item">
+      <div class="rs-val" style="color:${pct >= 60 ? 'var(--app-green)' : 'var(--app-red)'};">${correct}/${total}</div>
+      <div class="rs-lbl">Aciertos</div>
+    </div>
+    <div class="rs-item">
+      <div class="rs-val" style="color:var(--app-orange);">${mins}:${String(secs).padStart(2,'0')}</div>
+      <div class="rs-lbl">Tiempo</div>
+    </div>
+  `;
+
+  document.getElementById('resultsDetail').innerHTML = state.answers.map(a => `
+    <div class="rd-row">
+      <span class="rd-email-name">${a.emailSubject.substring(0,40)}${a.emailSubject.length > 40 ? '...' : ''}</span>
+      <span class="rd-badge ${a.correct ? 'correct' : 'wrong'}">
+        ${a.correct ? '✓ Correcto' : '✗ Incorrecto'} · ${a.points}pts
+      </span>
+    </div>
+  `).join('');
+
+  showView('viewResults');
+}
+
+function resetAndGoLobby() {
+  state = {
+    currentCourse: null, currentGroup: null, members: [],
+    currentEmailIdx: 0, score: 0, answers: [], hintsFound: {},
+    timerSec: 300, timerInterval: null, emailOrder: [],
+    isAdmin: state.isAdmin, dashCourseFilter: 'all'
+  };
+  document.getElementById('missionTimer').style.color = 'var(--app-green)';
+  initLobby();
+  showView('viewLobby');
+}
+
+/* ═══════════════════════════════════════════
+   ADMIN LOGIN
+   ═══════════════════════════════════════════ */
+function adminLogin() {
+  const user = document.getElementById('adminUser').value.trim();
+  const pass = document.getElementById('adminPass').value;
+
+  if (user === ADMIN_CREDS.user && pass === ADMIN_CREDS.pass) {
+    state.isAdmin = true;
+    document.getElementById('loginError').style.display = 'none';
+    refreshDashboard();
+    showView('viewDashboard');
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+function adminLogout() {
+  state.isAdmin = false;
+  document.getElementById('adminPass').value = '';
+  showView('viewLobby');
+}
+
+/* ═══════════════════════════════════════════
+   DASHBOARD
+   ═══════════════════════════════════════════ */
+function refreshDashboard() {
+  const db = getDB();
+  const filter = state.dashCourseFilter;
+
+  // Course tabs
+  const tabs = document.getElementById('courseTabs');
+  tabs.innerHTML = `<button class="course-tab ${filter === 'all' ? 'active' : ''}" onclick="filterCourse('all')">Todos los cursos</button>`;
+  db.courses.forEach(c => {
+    const count = db.groups.filter(g => g.courseId === c.id).length;
+    if (count > 0) {
+      tabs.innerHTML += `<button class="course-tab ${filter === c.id ? 'active' : ''}" onclick="filterCourse('${c.id}')">${c.name} (${count})</button>`;
+    }
+  });
+
+  // Filter groups
+  let groups = db.groups.filter(g => g.completedAt);
+  if (filter !== 'all') groups = groups.filter(g => g.courseId === filter);
+
+  // Sort by score desc
+  groups.sort((a, b) => b.score - a.score);
+
+  // Stats
+  const totalGroups = groups.length;
+  const avgScore = totalGroups > 0 ? Math.round(groups.reduce((s, g) => s + g.score, 0) / totalGroups) : 0;
+  const totalStudents = groups.reduce((s, g) => s + (g.members?.length || 0), 0);
+  const perfectGroups = groups.filter(g => g.answers && g.answers.every(a => a.correct)).length;
+  const avgAcc = totalGroups > 0 ? Math.round(groups.reduce((s, g) => {
+    const correct = g.answers ? g.answers.filter(a => a.correct).length : 0;
+    const total = g.answers ? g.answers.length : 1;
+    return s + (correct / total) * 100;
+  }, 0) / totalGroups) : 0;
+
+  document.getElementById('dashStats').innerHTML = `
+    <div class="dash-stat-card">
+      <div class="dsc-label">Escuadrones</div>
+      <div class="dsc-value" style="color:var(--app-cyan);">${totalGroups}</div>
+      <div class="dsc-sub">${totalStudents} estudiantes total</div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dsc-label">Puntuación Promedio</div>
+      <div class="dsc-value" style="color:var(--app-green);">${avgScore}</div>
+      <div class="dsc-sub">de un máximo posible</div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dsc-label">Precisión Promedio</div>
+      <div class="dsc-value" style="color:var(--app-orange);">${avgAcc}%</div>
+      <div class="dsc-sub">aciertos en clasificación</div>
+    </div>
+    <div class="dash-stat-card">
+      <div class="dsc-label">Puntuación Perfecta</div>
+      <div class="dsc-value" style="color:var(--app-purple);">${perfectGroups}</div>
+      <div class="dsc-sub">escuadrones sin errores</div>
+    </div>
+  `;
+
+  // Table
+  const tableBody = document.getElementById('groupsTableBody');
+  if (groups.length === 0) {
+    tableBody.innerHTML = '<div class="no-data"><i class="fas fa-inbox" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>No hay resultados aún para este filtro</div>';
+    return;
+  }
+
+  const maxPossible = EMAILS.reduce((sum, e) => {
+    if (e.isPhishing) {
+      const hints = (e.body.match(/phish-target/g) || []).length;
+      return sum + 10 + hints * 5;
+    }
+    return sum + 10;
+  }, 0);
+
+  let tableHTML = `<table class="gt-table">
+    <thead><tr>
+      <th style="width:50px;">#</th>
+      <th>Escuadrón</th>
+      <th>Curso</th>
+      <th>Integrantes</th>
+      <th>Puntuación</th>
+      <th>Aciertos</th>
+      <th>Tiempo</th>
+      <th>Fecha</th>
+    </tr></thead><tbody>`;
+
+  groups.forEach((g, i) => {
+    const rank = i + 1;
+    const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+    const course = db.courses.find(c => c.id === g.courseId);
+    const correct = g.answers ? g.answers.filter(a => a.correct).length : 0;
+    const total = g.answers ? g.answers.length : 0;
+    const pct = maxPossible > 0 ? Math.round((g.score / maxPossible) * 100) : 0;
+    const barColor = pct >= 70 ? 'var(--app-green)' : pct >= 40 ? 'var(--app-orange)' : 'var(--app-red)';
+    const timeUsed = g.timeUsed || 0;
+    const mins = Math.floor(timeUsed / 60);
+    const secs = timeUsed % 60;
+    const dateStr = g.completedAt ? new Date(g.completedAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-';
+
+    tableHTML += `<tr>
+      <td><span class="rank-badge ${rankClass}">${rank}</span></td>
+      <td style="font-weight:600;color:#fff;">${g.name}</td>
+      <td style="font-size:0.78rem;">${course ? course.name : 'N/A'}</td>
+      <td><div class="members-cell">${(g.members || []).map(m => `<span class="member-mini">${m}</span>`).join('')}</div></td>
+      <td>
+        <div class="score-bar"><div class="score-fill" style="width:${pct}%;background:${barColor};"></div></div>
+        <span style="font-family:'Fira Code',monospace;font-weight:600;">${g.score}</span>
+      </td>
+      <td><span style="color:${correct === total ? 'var(--app-green)' : 'var(--app-text)'};">${correct}/${total}</span></td>
+      <td style="font-family:'Fira Code',monospace;font-size:0.82rem;">${mins}:${String(secs).padStart(2,'0')}</td>
+      <td style="font-size:0.78rem;">${dateStr}</td>
+    </tr>`;
+  });
+
+  tableHTML += '</tbody></table>';
+  tableBody.innerHTML = tableHTML;
+}
+
+function filterCourse(courseId) {
+  state.dashCourseFilter = courseId;
+  refreshDashboard();
+}
+
+function exportJSON() {
+  const db = getDB();
+  const filter = state.dashCourseFilter;
+  let data = filter === 'all' ? db : {
+    ...db,
+    groups: db.groups.filter(g => g.courseId === filter),
+    courses: db.courses.filter(c => c.id === filter)
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `guardianes_resultados_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('📥 Archivo JSON descargado', 'info');
+}
+
+function clearCourseData() {
+  const filter = state.dashCourseFilter;
+  if (filter === 'all') {
+    if (!confirm('¿Eliminar TODOS los resultados de TODOS los cursos? Esta acción no se puede deshacer.')) return;
+    const db = getDB();
+    db.groups = [];
+    saveDB(db);
+  } else {
+    const db = getDB();
+    const course = db.courses.find(c => c.id === filter);
+    if (!confirm(`¿Eliminar todos los resultados de "${course?.name}"?`)) return;
+    db.groups = db.groups.filter(g => g.courseId !== filter);
+    saveDB(db);
+  }
+  refreshDashboard();
+  toast('🗑️ Resultados eliminados', 'info');
+}
+
+/* ═══════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════ */
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `gm-toast ${type} show`;
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════ */
+initLobby();
+</script>
+</body>
+</html>
